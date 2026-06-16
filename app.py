@@ -1,133 +1,78 @@
 import streamlit as st
-from google import genai
-from google.genai import types
 
-# 페이지 설정
 st.set_page_config(
-    page_title="연애상담 챗봇",
-    page_icon="💌",
+    page_title="우리반 친구 매칭",
+    page_icon="🤝",
+    layout="centered"
 )
 
-st.title("💌 연애상담 챗봇")
-st.caption("Gemini 2.5 Flash Lite 기반 상담 챗봇")
+st.title("🤝 우리반 친구 매칭")
+st.write("성격과 취미를 선택하면 잘 맞는 친구 유형을 추천해드립니다!")
 
-# API 키 불러오기
+# 성격 데이터
+friend_data = {
+    "외향적": {
+        "match": "활발하고 긍정적인 친구",
+        "tip": "점심시간에 함께 놀자고 먼저 말해보세요."
+    },
+    "내향적": {
+        "match": "차분하고 배려심 많은 친구",
+        "tip": "공통 관심사 이야기를 천천히 시작해보세요."
+    },
+    "리더형": {
+        "match": "협동을 잘하는 친구",
+        "tip": "모둠 활동에서 함께 역할을 나눠보세요."
+    },
+    "배려형": {
+        "match": "친절하고 공감 능력이 높은 친구",
+        "tip": "상대방 이야기를 잘 들어주면 가까워질 수 있어요."
+    }
+}
+
 try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    st.error("Secrets에 GEMINI_API_KEY를 등록해주세요.")
-    st.stop()
+    name = st.text_input("이름을 입력하세요")
 
-# Gemini 클라이언트 생성
-try:
-    client = genai.Client(api_key=api_key)
-except Exception as e:
-    st.error(f"Gemini 클라이언트 생성 실패: {e}")
-    st.stop()
+    personality = st.selectbox(
+        "성격을 선택하세요",
+        ["외향적", "내향적", "리더형", "배려형"]
+    )
 
-# 시스템 프롬프트
-SYSTEM_PROMPT = """
-너는 따뜻하고 공감 능력이 뛰어난 연애상담 챗봇이다.
+    hobby = st.selectbox(
+        "좋아하는 취미를 선택하세요",
+        ["운동", "게임", "독서", "음악", "그림", "영화"]
+    )
 
-규칙:
-- 사용자의 감정을 존중한다.
-- 비난하거나 공격적으로 말하지 않는다.
-- 현실적이고 도움이 되는 조언을 제공한다.
-- 짧고 읽기 쉽게 답변한다.
-- 필요하면 위로와 공감을 먼저 한다.
-"""
+    style = st.radio(
+        "친구를 사귈 때 나는?",
+        [
+            "먼저 다가간다",
+            "상대가 다가오길 기다린다",
+            "공통 관심사가 있으면 말한다"
+        ]
+    )
 
-# 세션 상태 초기화
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+    if st.button("🔍 친구 찾기"):
 
-# 이전 대화 출력
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        result = friend_data[personality]
 
-# 사용자 입력
-user_input = st.chat_input("연애 고민을 이야기해보세요...")
+        st.success(f"{name}님과 잘 맞는 친구 유형")
 
-if user_input:
-    # 사용자 메시지 저장
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_input
-    })
+        st.subheader("추천 친구")
+        st.write(f"👉 {result['match']}")
 
-    # 사용자 메시지 출력
-    with st.chat_message("user"):
-        st.markdown(user_input)
+        st.subheader("공통 취미 추천")
+        st.write(f"👉 {hobby} 활동을 함께 하면 친해질 가능성이 높아요.")
 
-    # AI 응답 생성
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
+        st.subheader("친구 사귀기 팁")
+        st.info(result["tip"])
 
-        try:
-            # 대화 기록 문자열 생성
-            history_text = ""
-
-            for msg in st.session_state.messages:
-                role = "사용자" if msg["role"] == "user" else "상담사"
-                history_text += f"{role}: {msg['content']}\n"
-
-            prompt = f"""
-{SYSTEM_PROMPT}
-
-다음은 지금까지의 대화 내용이다.
-
-{history_text}
-
-상담사 답변:
-"""
-
-            response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.8,
-                    max_output_tokens=500,
-                )
+        if style == "상대가 다가오길 기다린다":
+            st.warning(
+                "가끔은 먼저 인사하는 작은 용기가 새로운 친구를 만들 수 있어요!"
             )
 
-            ai_response = response.text
+        st.balloons()
 
-            # 응답 출력
-            message_placeholder.markdown(ai_response)
-
-            # 대화 저장
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": ai_response
-            })
-
-        except Exception as e:
-            error_message = f"오류가 발생했어요 😢\n\n{str(e)}"
-
-            message_placeholder.error(error_message)
-
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": error_message
-            })
-
-# 사이드바
-with st.sidebar:
-    st.header("⚙️ 설정")
-
-    if st.button("대화 초기화"):
-        st.session_state.messages = []
-        st.rerun()
-
-    st.markdown("---")
-    st.markdown("""
-### 📌 사용 모델
-- gemini-2.5-flash-lite
-
-### 💡 예시 질문
-- 썸남이 연락이 줄었어요
-- 헤어진 전애인이 생각나요
-- 고백해도 될까요?
-- 장거리 연애가 힘들어요
-""")
+except Exception as e:
+    st.error("오류가 발생했습니다.")
+    st.error(str(e))
