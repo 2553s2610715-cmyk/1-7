@@ -1,124 +1,151 @@
-import streamlit as st
-import random
-import time
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>진로 추천 테스트</title>
 
-# -----------------------------------
-# 페이지 설정
-# -----------------------------------
-st.set_page_config(
-    page_title="전생 직업 감별기",
-    page_icon="🔮",
-    layout="centered"
-)
+<style>
+body {
+    font-family: "Malgun Gothic", sans-serif;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
 
-# -----------------------------------
-# 전생 데이터
-# -----------------------------------
-past_jobs = [
-    {
-        "job": "왕국의 마법사 🧙",
-        "desc": "당신은 사람들의 운명을 바꾸는 강력한 마법사였습니다.",
-        "power": 95
-    },
-    {
-        "job": "해적선 선장 ☠️",
-        "desc": "바다를 지배하며 전설로 남은 인물이었습니다.",
-        "power": 88
-    },
-    {
-        "job": "닌자 암살자 🥷",
-        "desc": "그 누구도 당신의 움직임을 눈치채지 못했습니다.",
-        "power": 91
-    },
-    {
-        "job": "우주 탐험가 🚀",
-        "desc": "지구 밖 미지의 세계를 탐험하던 모험가였습니다.",
-        "power": 84
-    },
-    {
-        "job": "용을 길들이는 기사 🐉",
-        "desc": "드래곤과 함께 전장을 누비던 전설의 기사였습니다.",
-        "power": 97
-    },
-    {
-        "job": "치킨집 사장 🍗",
-        "desc": "동네 사람 모두가 인정한 전설의 맛집 주인이었습니다.",
-        "power": 100
+.container {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+select, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    background: #0078ff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #005fd1;
+}
+
+#result {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    white-space: pre-line;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎯 진로 추천 테스트</h1>
+
+    <label>좋아하는 활동은?</label>
+    <select id="activity">
+        <option value="tech">💻 프로그래밍/기술</option>
+        <option value="art">🎨 예술/디자인</option>
+        <option value="business">📈 경영/마케팅</option>
+        <option value="science">🔬 과학/연구</option>
+    </select>
+
+    <label>가장 중요하게 생각하는 것은?</label>
+    <select id="priority">
+        <option value="salary">💰 높은 연봉</option>
+        <option value="creativity">✨ 창의성</option>
+        <option value="stability">🏢 안정성</option>
+        <option value="impact">🌍 사회 기여</option>
+    </select>
+
+    <button onclick="recommendCareer()">결과 보기</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+function recommendCareer() {
+    const activity = document.getElementById("activity").value;
+    const priority = document.getElementById("priority").value;
+
+    let career = "";
+    let detail = "";
+
+    switch(activity) {
+        case "tech":
+            career = "소프트웨어 개발자, AI 엔지니어, 데이터 분석가";
+            break;
+        case "art":
+            career = "그래픽 디자이너, UX/UI 디자이너, 영상 제작자";
+            break;
+        case "business":
+            career = "마케터, 사업기획자, 경영 컨설턴트";
+            break;
+        case "science":
+            career = "연구원, 바이오 과학자, 환경 전문가";
+            break;
     }
-]
 
-# -----------------------------------
-# 제목
-# -----------------------------------
-st.title("🔮 AI 전생 직업 감별기")
-st.write("당신의 이름을 입력하면 전생 직업을 분석합니다.")
+    switch(priority) {
+        case "salary":
+            detail = "고소득 가능성이 높은 분야를 추천합니다.";
+            break;
+        case "creativity":
+            detail = "창의성을 발휘할 수 있는 분야를 추천합니다.";
+            break;
+        case "stability":
+            detail = "비교적 안정적인 직업군을 추천합니다.";
+            break;
+        case "impact":
+            detail = "사회에 긍정적인 영향을 줄 수 있는 분야를 추천합니다.";
+            break;
+    }
 
-st.divider()
+    const resultBox = document.getElementById("result");
+    resultBox.style.display = "block";
+    resultBox.innerHTML =
+    `✅ 추천 진로
 
-# -----------------------------------
-# 입력
-# -----------------------------------
-name = st.text_input("이름 입력")
+${career}
 
-birth_month = st.selectbox(
-    "태어난 월",
-    list(range(1, 13))
-)
+📌 추천 이유
+${detail}
 
-personality = st.radio(
-    "성격 선택",
-    ["활발함", "조용함", "웃김", "진지함"]
-)
+🚀 앞으로 관련 공부와 경험을 쌓아보세요!`;
+}
+</script>
 
-st.divider()
-
-# -----------------------------------
-# 버튼
-# -----------------------------------
-if st.button("전생 분석 시작 🚀"):
-
-    if name.strip() == "":
-        st.error("이름을 입력해주세요!")
-    else:
-
-        # 로딩 연출
-        with st.spinner("AI가 전생 기록을 탐색 중입니다..."):
-            time.sleep(2)
-
-        result = random.choice(past_jobs)
-
-        st.success(f"{name}님의 전생 분석 완료!")
-
-        st.markdown(f"# {result['job']}")
-        st.write(result["desc"])
-
-        st.subheader("⚡ 전설 능력치")
-        st.progress(result["power"] / 100)
-        st.write(f"능력치: {result['power']}점")
-
-        # 전생 특징
-        features = [
-            "말빨이 엄청났음 🗣️",
-            "숨만 쉬어도 인기 많았음 😎",
-            "돈 냄새를 기가 막히게 맡음 💰",
-            "운이 비정상적으로 좋았음 🍀",
-            "먹을 거 앞에서 진심이었음 🍜"
-        ]
-
-        st.subheader("📜 전생 특징")
-        st.write(random.choice(features))
-
-        # 오늘의 운세
-        luck = random.randint(1, 100)
-
-        st.subheader("🍀 오늘의 운세")
-        st.write(f"오늘의 행운 수치: {luck}%")
-
-        if luck >= 80:
-            st.info("오늘은 뭘 해도 잘 풀리는 날입니다!")
-        elif luck >= 50:
-            st.info("무난하게 좋은 하루가 될 것 같네요.")
-        else:
-            st.info("집에서 쉬면서 에너지 충전 추천 😴")
-
-        st.balloons()
+</body>
+</html>
